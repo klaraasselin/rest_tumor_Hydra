@@ -44,10 +44,10 @@ source("0c_functions.R")
 
 #' For each lineage, determine the supernumerary tentacle threshold, defined
 #' as the maximum tentacle number observed among healthy individuals kept in
-#' control rest conditions.
+#' control treatment conditions.
 
 df %>%
-  filter(tum_state == "Healthy", rest_condition == "Control") %>%
+  filter(tum_state == "Healthy", treatment_condition == "Control") %>%
   pivot_longer(cols = starts_with("tenta_"),
                names_to = "time", 
                values_to = "tentacles") %>%
@@ -119,13 +119,13 @@ tenta_df <-
                                              TRUE ~ 0))) %>%
   
   #' Keep only the variables needed for the analysis.
-  select(age_followup, tenta_event, status_competing, lineage, rest_condition, tum_state_early, 
+  select(age_followup, tenta_event, status_competing, lineage, treatment_condition, tum_state_early, 
          id_unique, parent_unique, replicate_unique) %>%
   
   droplevels()
 
 #' Set reference levels for the categorical variables.
-tenta_df$rest_condition <- relevel(tenta_df$rest_condition, ref = "Control")
+tenta_df$treatment_condition <- relevel(tenta_df$treatment_condition, ref = "Control")
 tenta_df$tum_state_early <- relevel(tenta_df$tum_state_early, ref = "Healthy")
 
 #' # Survival object
@@ -136,7 +136,7 @@ tenta_surv_object <- Surv(tenta_df$age_followup, tenta_df$tenta_event)
 #' # Proportional hazards assumption check : Schoenfeld residuals
 
 #' Fit a preliminary full Cox model (fixed effects only).
-tenta_cox <- coxph(Surv(age_followup, tenta_event) ~ rest_condition + tum_state_early, data = tenta_df)
+tenta_cox <- coxph(Surv(age_followup, tenta_event) ~ treatment_condition + tum_state_early, data = tenta_df)
 
 #' Test the proportional hazards assumption.
 print(cox.zph(tenta_cox))
@@ -151,16 +151,16 @@ print(cox.zph(tenta_cox))
 #' With the full fixed-effect structure held constant, compare different
 #' random-effect structures to find the optimal one.
 
-tenta_R_0 <- coxph(Surv(age_followup, tenta_event) ~ rest_condition + tum_state_early, 
+tenta_R_0 <- coxph(Surv(age_followup, tenta_event) ~ treatment_condition + tum_state_early, 
                    data = tenta_df)
 
-tenta_R_1 <- coxme(Surv(age_followup, tenta_event) ~ rest_condition + tum_state_early + 
+tenta_R_1 <- coxme(Surv(age_followup, tenta_event) ~ treatment_condition + tum_state_early + 
                      (1 | parent_unique), data = tenta_df)
 
-tenta_R_2 <- coxme(Surv(age_followup, tenta_event) ~ rest_condition + tum_state_early + 
+tenta_R_2 <- coxme(Surv(age_followup, tenta_event) ~ treatment_condition + tum_state_early + 
                      (1 | replicate_unique), data = tenta_df)
 
-tenta_R_3 <- coxme(Surv(age_followup, tenta_event) ~ rest_condition + tum_state_early + 
+tenta_R_3 <- coxme(Surv(age_followup, tenta_event) ~ treatment_condition + tum_state_early + 
                      (1 | parent_unique) + (1 | replicate_unique), data = tenta_df)
 
 AIC(tenta_R_0, tenta_R_1, tenta_R_2, tenta_R_3) %>% arrange(AIC)
@@ -175,10 +175,10 @@ AIC(tenta_R_0, tenta_R_1, tenta_R_2, tenta_R_3) %>% arrange(AIC)
 #' fixed-effect structures to find the optimal one.
 
 tenta_F_0 <- coxph(Surv(age_followup, tenta_event) ~ 1, data = tenta_df)
-tenta_F_1 <- coxph(Surv(age_followup, tenta_event) ~ rest_condition, data = tenta_df)
+tenta_F_1 <- coxph(Surv(age_followup, tenta_event) ~ treatment_condition, data = tenta_df)
 tenta_F_2 <- coxph(Surv(age_followup, tenta_event) ~ tum_state_early, data = tenta_df)
-tenta_F_3 <- coxph(Surv(age_followup, tenta_event) ~ rest_condition + tum_state_early, data = tenta_df)
-tenta_F_4 <- coxph(Surv(age_followup, tenta_event) ~ rest_condition * tum_state_early, data = tenta_df)
+tenta_F_3 <- coxph(Surv(age_followup, tenta_event) ~ treatment_condition + tum_state_early, data = tenta_df)
+tenta_F_4 <- coxph(Surv(age_followup, tenta_event) ~ treatment_condition * tum_state_early, data = tenta_df)
 
 AIC(tenta_F_0, tenta_F_1, tenta_F_2, tenta_F_3, tenta_F_4) %>% arrange(AIC)
 
@@ -201,7 +201,7 @@ summary(coxph(Surv(age_followup, tenta_event) ~ tum_state_early, data = tenta_df
 #' # Median times by tumoral state
 
 #' Estimate cumulative incidence functions for the supernumerary tentacles event,
-#' accounting for the competing risk of death, stratified by rest tumoral state.
+#' accounting for the competing risk of death, stratified by treatment tumoral state.
 
 tenta_cuminc_tum <- cuminc(Surv(age_followup, status_competing) ~ tum_state_early, data = tenta_df)
 

@@ -79,16 +79,16 @@ tum_df <-
   filter(!is.na(age_followup)) %>%
   
   #' Set factor levels for later use in the plots.
-  mutate(rest_condition = factor(rest_condition, 
-                                  levels = c("Control", "Mechanical disruption"))) %>%
+  mutate(treatment_condition = factor(treatment_condition, 
+                                  levels = c("Control", "Shaking treatment"))) %>%
   
   #' Keep only the variables needed for the analysis.
-  select(age_followup, tum_event, status_competing, rest_condition, 
+  select(age_followup, tum_event, status_competing, treatment_condition, 
          lineage, parent_unique, replicate_unique)
 
 #' Set reference levels for the categorical variables.
 tum_df$lineage <- relevel(factor(tum_df$lineage), ref = "HO_MT")
-tum_df$rest_condition <- relevel(factor(tum_df$rest_condition), ref = "Control")
+tum_df$treatment_condition <- relevel(factor(tum_df$treatment_condition), ref = "Control")
 
 #' # Survival object
 
@@ -98,7 +98,7 @@ tum_surv_object <- Surv(tum_df$age_followup, tum_df$tum_event)
 #' # Proportional hazards assumption check : Schoenfeld residuals
 
 #' Fit a preliminary full Cox model (fixed effects only).
-tum_cox <- coxph(Surv(age_followup, tum_event) ~ rest_condition * lineage, data = tum_df)
+tum_cox <- coxph(Surv(age_followup, tum_event) ~ treatment_condition * lineage, data = tum_df)
 
 #' Test the proportional hazards assumption.
 print(cox.zph(tum_cox))
@@ -134,18 +134,18 @@ AIC(dist_weib, dist_lnorm, dist_llog, dist_exp) %>% arrange(AIC)
 #' With the full fixed-effect structure held constant, compare different
 #' random-effect structures to find the optimal one.
 
-tum_R_0 <- SurvregME(Surv(age_followup, tum_event) ~ rest_condition * lineage, 
+tum_R_0 <- SurvregME(Surv(age_followup, tum_event) ~ treatment_condition * lineage, 
                      data = tum_df, dist = "weibull")
 
-tum_R_1 <- SurvregME(Surv(age_followup, tum_event) ~ rest_condition * lineage + 
+tum_R_1 <- SurvregME(Surv(age_followup, tum_event) ~ treatment_condition * lineage + 
                        (1 | parent_unique), 
                      data = tum_df, dist = "weibull")
 
-tum_R_2 <- SurvregME(Surv(age_followup, tum_event) ~ rest_condition * lineage +
+tum_R_2 <- SurvregME(Surv(age_followup, tum_event) ~ treatment_condition * lineage +
                        (1 | replicate_unique), 
                      data = tum_df, dist = "weibull")
 
-tum_R_3 <- SurvregME(Surv(age_followup, tum_event) ~ rest_condition * lineage + 
+tum_R_3 <- SurvregME(Surv(age_followup, tum_event) ~ treatment_condition * lineage + 
                        (1 | parent_unique) + (1 | replicate_unique), 
                      data = tum_df, dist = "weibull") 
 
@@ -164,21 +164,21 @@ AIC(tum_R_0, tum_R_1, tum_R_2, tum_R_3) %>% arrange(AIC)
 tum_F_0 <- SurvregME(Surv(age_followup, tum_event) ~ 1, 
                      data = tum_df, dist = "weibull")
 
-tum_F_1 <- SurvregME(Surv(age_followup, tum_event) ~ rest_condition, 
+tum_F_1 <- SurvregME(Surv(age_followup, tum_event) ~ treatment_condition, 
                      data = tum_df, dist = "weibull")
 
 tum_F_2 <- SurvregME(Surv(age_followup, tum_event) ~ lineage, 
                      data = tum_df, dist = "weibull")
 
-tum_F_3 <- SurvregME(Surv(age_followup, tum_event) ~ rest_condition + lineage, 
+tum_F_3 <- SurvregME(Surv(age_followup, tum_event) ~ treatment_condition + lineage, 
                      data = tum_df, dist = "weibull")
 
-tum_F_4 <- SurvregME(Surv(age_followup, tum_event) ~ rest_condition * lineage, 
+tum_F_4 <- SurvregME(Surv(age_followup, tum_event) ~ treatment_condition * lineage, 
                      data = tum_df, dist = "weibull")
 
 AIC(tum_F_0, tum_F_1, tum_F_2, tum_F_3, tum_F_4) %>% arrange(AIC)
 
-#' The model with the interaction between the rest condition and the lineage has 
+#' The model with the interaction between the treatment condition and the lineage has 
 #' the lowest AIC and is therefore selected (tum_F_4).
 #' 
 #' ## Goodness-of-fit evaluation
@@ -194,28 +194,28 @@ plot_cox_snell_survregme(model = tum_F_4, data = tum_df,
 #' Releveling of "lineage" to obtain all pairwise comparisons from the same selected model.
 
 tum_df$lineage <- relevel(tum_df$lineage, ref = "HO_MT")
-summary(SurvregME(Surv(age_followup, tum_event) ~ rest_condition * lineage, 
+summary(SurvregME(Surv(age_followup, tum_event) ~ treatment_condition * lineage, 
                   data = tum_df, dist = "weibull"))
 
 tum_df$lineage <- relevel(tum_df$lineage, ref = "HO_SPC")
-summary(SurvregME(Surv(age_followup, tum_event) ~ rest_condition * lineage, 
+summary(SurvregME(Surv(age_followup, tum_event) ~ treatment_condition * lineage, 
                   data = tum_df, dist = "weibull"))
 
 tum_df$lineage <- relevel(tum_df$lineage, ref = "HO_SPT")
-summary(SurvregME(Surv(age_followup, tum_event) ~ rest_condition * lineage, 
+summary(SurvregME(Surv(age_followup, tum_event) ~ treatment_condition * lineage, 
                   data = tum_df, dist = "weibull"))
 
 #' # Median times
 
-#' ## By rest condition
+#' ## By treatment condition
 
 #' Estimate cumulative incidence functions for the tumor event,
-#' accounting for the competing risk of death, stratified by rest condition.
-tum_cuminc_rest <- cuminc(Surv(age_followup, status_competing) ~ 
-                             rest_condition, data = tum_df)
+#' accounting for the competing risk of death, stratified by treatment condition.
+tum_cuminc_treatment <- cuminc(Surv(age_followup, status_competing) ~ 
+                             treatment_condition, data = tum_df)
 
 #' For each stratum, extract the median time to event and its 95CI.
-tum_medians_rest <- tidy(tum_cuminc_rest) %>%
+tum_medians_treatment <- tidy(tum_cuminc_treatment) %>%
   dplyr::filter(outcome == "1") %>%
   dplyr::group_by(strata) %>%
   dplyr::arrange(time) %>%
@@ -228,7 +228,7 @@ tum_medians_rest <- tidy(tum_cuminc_rest) %>%
     if (is.na(idx)) NA_real_ else time[idx] },
     .groups = "drop")
 
-print(tum_medians_rest)
+print(tum_medians_treatment)
 
 #' ## By lineage
 
@@ -251,12 +251,12 @@ tum_medians_lineage <- tidy(tum_cuminc_lineage) %>%
 
 print(tum_medians_lineage)
 
-#' ## By rest condition and lineage
+#' ## By treatment condition and lineage
 
-#' Same method as above, but stratified by rest condition and lineage.
+#' Same method as above, but stratified by treatment condition and lineage.
 
 tum_cuminc_interaction <- cuminc(Surv(age_followup, status_competing) ~ 
-                                   rest_condition + lineage, data = tum_df)
+                                   treatment_condition + lineage, data = tum_df)
 
 tum_medians_interaction <- tidy(tum_cuminc_interaction) %>%
   dplyr::filter(outcome == "1") %>%
@@ -275,11 +275,11 @@ print(tum_medians_interaction)
 
 #' # Cumulative incidences
 
-#' ## By week and rest condition
+#' ## By week and treatment condition
 
 #' Convert the continuous cumulative incidence function into a weekly summary table:
-#' for each stratum of rest condition and each week, show the estimate with its 95CI.
-tum_incidence_rest <- tidy(tum_cuminc_rest) %>%
+#' for each stratum of treatment condition and each week, show the estimate with its 95CI.
+tum_incidence_treatment <- tidy(tum_cuminc_treatment) %>%
   dplyr::filter(outcome == "1") %>%
   dplyr::mutate(week = ceiling(time)) %>%
   dplyr::group_by(strata, week) %>%
@@ -289,7 +289,7 @@ tum_incidence_rest <- tidy(tum_cuminc_rest) %>%
   dplyr::select(strata, week, estimate_cuminc = estimate, conf.low, conf.high) %>%
   dplyr::arrange(strata, week)
 
-print(tum_incidence_rest)
+print(tum_incidence_treatment)
 
 #' ## By week and lineage
 
@@ -307,9 +307,9 @@ tum_incidence_lineage <- tidy(tum_cuminc_lineage) %>%
 
 print(tum_incidence_lineage)
 
-#' ## By week, rest condition, and lineage
+#' ## By week, treatment condition, and lineage
 
-#' Same method as above, but stratified by rest condition and lineage.
+#' Same method as above, but stratified by treatment condition and lineage.
 
 tum_incidence_interaction <- tidy(tum_cuminc_interaction) %>%
   dplyr::filter(outcome == "1") %>%
@@ -325,13 +325,13 @@ print(tum_incidence_interaction)
 
 #' # Cumulative proportions
 
-#' ## By week and rest condition
+#' ## By week and treatment condition
 
 #' Compute raw cumulative proportions of tumor occurrence per week, 
-#' stratified by rest condition.
-tum_proportions_rest <- tum_df %>%
+#' stratified by treatment condition.
+tum_proportions_treatment <- tum_df %>%
   dplyr::mutate(week_tum_event = ceiling(age_followup)) %>%
-  dplyr::group_by(rest_condition) %>%
+  dplyr::group_by(treatment_condition) %>%
   dplyr::summarise(total_N = n(),
                    n1 = sum(week_tum_event <= 1 & tum_event == 1),
                    n2 = sum(week_tum_event <= 2 & tum_event == 1),
@@ -350,9 +350,9 @@ tum_proportions_rest <- tum_df %>%
                       names_to = c(".value", "week"),
                       names_pattern = "(n|p)([1-6])") %>%
   dplyr::mutate(week = as.numeric(week)) %>%
-  dplyr::select(rest_condition, week, n, total_N, raw_proportion = p)
+  dplyr::select(treatment_condition, week, n, total_N, raw_proportion = p)
 
-print(tum_proportions_rest)
+print(tum_proportions_treatment)
 
 #' ## By week and lineage
 
@@ -383,13 +383,13 @@ tum_proportions_lineage <- tum_df %>%
 
 print(tum_proportions_lineage)
 
-#' ## By week, rest condition, and lineage
+#' ## By week, treatment condition, and lineage
 
-#' Same method as above, but stratified by rest condition and lineage.
+#' Same method as above, but stratified by treatment condition and lineage.
 
 tum_proportions_interaction <- tum_df %>%
   dplyr::mutate(week_tum_event = ceiling(age_followup)) %>%
-  dplyr::group_by(rest_condition, lineage) %>%
+  dplyr::group_by(treatment_condition, lineage) %>%
   dplyr::summarise(total_N = n(),
                    n1 = sum(week_tum_event <= 1 & tum_event == 1),
                    n2 = sum(week_tum_event <= 2 & tum_event == 1),
@@ -408,7 +408,7 @@ tum_proportions_interaction <- tum_df %>%
                       names_to = c(".value", "week"),
                       names_pattern = "(n|p)([1-6])") %>%
   dplyr::mutate(week = as.numeric(week)) %>%
-  dplyr::select(rest_condition, lineage, week, n, total_N, raw_proportion = p)
+  dplyr::select(treatment_condition, lineage, week, n, total_N, raw_proportion = p)
 
 print(tum_proportions_interaction)
 
@@ -438,10 +438,10 @@ show_y <- theme(axis.text.y.right = element_text(color = "black", size = 14),
 #' Theme of x-axis
 scale_x <- scale_x_continuous(limits = c(0, 6), breaks = seq(0, 6, by = 2))
 
-#' Color scales for rest condition
-rest_scale <- list(
-  scale_color_manual(values = rest_condition_colors, breaks = c("Control", "Mechanical disruption")),
-  scale_fill_manual(values = rest_condition_colors, breaks = c("Control", "Mechanical disruption")))
+#' Color scales for treatment condition
+treatment_scale <- list(
+  scale_color_manual(values = treatment_condition_colors, breaks = c("Control", "Shaking treatment")),
+  scale_fill_manual(values = treatment_condition_colors, breaks = c("Control", "Shaking treatment")))
 
 #' Theme shared by all panels (angle = 90 for bottom-to-top reading)
 theme_common <- theme(
@@ -456,17 +456,17 @@ labs_x_only <- labs(x = "Time (weeks)", y = NULL, title = NULL)
 labs_y_only <- labs(x = NULL, y = "Cumulative incidence\nof tumor development", title = NULL)
 labs_xy     <- labs(x = "Time (weeks)", y = "Cumulative incidence\nof tumor development", title = NULL)
 
-#' ## Panel A: by rest condition
+#' ## Panel A: by treatment condition
 
-#' Cumulative incidence of tumor onset by rest condition.
-A <- cuminc(Surv(age_followup, factor(status_competing)) ~ rest_condition, 
+#' Cumulative incidence of tumor onset by treatment condition.
+A <- cuminc(Surv(age_followup, factor(status_competing)) ~ treatment_condition, 
             data = tum_df) %>%
   ggcuminc(outcome = "1") +
   add_confidence_interval() +
-  labs_xy + scale_y + rest_scale + scale_x +
+  labs_xy + scale_y + treatment_scale + scale_x +
   theme_bw() + theme_common + show_y +
   theme(legend.position = "none") +
-  plot_annotation(title = "Mechanical disruption effect",
+  plot_annotation(title = "Shaking treatment effect",
                   theme = theme(plot.title = element_text(
                     hjust = 0.5, face = "bold", size = 16, margin = margin(b = 10))))
 
@@ -477,16 +477,16 @@ shared_legend <- cowplot::get_legend(
             legend.text = element_text(size = 13),
             legend.title = element_text(size = 14, face = "bold")))
 
-#' ## Panel B: by rest condition for each lineage
+#' ## Panel B: by treatment condition for each lineage
 
 #' ### HO_MT
 
-#' Cumulative incidence of tumor onset by rest condition for the lineage HO_MT.
-B1 <- cuminc(Surv(age_followup, factor(status_competing)) ~ rest_condition, 
+#' Cumulative incidence of tumor onset by treatment condition for the lineage HO_MT.
+B1 <- cuminc(Surv(age_followup, factor(status_competing)) ~ treatment_condition, 
              data = tum_df %>% filter(lineage == "HO_MT")) %>%
   ggcuminc(outcome = "1") +
   add_confidence_interval() +
-  labs_base + scale_y + scale_x + rest_scale +
+  labs_base + scale_y + scale_x + treatment_scale +
   theme_bw() + theme_common + hide_y +
   theme(legend.position = "none") +
   annotate("text", x = 0.2, y = 0.95, label = expression(bolditalic("Ho") * bold("_MT")),
@@ -495,11 +495,11 @@ B1 <- cuminc(Surv(age_followup, factor(status_competing)) ~ rest_condition,
 #' ### HO_SPC
 
 #' Same method as above, but for the lineage HO_SPC.
-B2 <- cuminc(Surv(age_followup, factor(status_competing)) ~ rest_condition,
+B2 <- cuminc(Surv(age_followup, factor(status_competing)) ~ treatment_condition,
              data = tum_df %>% filter(lineage == "HO_SPC")) %>%
   ggcuminc(outcome = "1") +
   add_confidence_interval() +
-  labs_x_only + scale_y + scale_x + rest_scale + 
+  labs_x_only + scale_y + scale_x + treatment_scale + 
   theme_bw() + theme_common + hide_y +
   theme(legend.position = "none") +
   annotate("text", x = 0.2, y = 0.95, label = expression(bolditalic("Ho") * bold("_SPC")),
@@ -508,11 +508,11 @@ B2 <- cuminc(Surv(age_followup, factor(status_competing)) ~ rest_condition,
 #' ### HO_SPT
 
 #' Same method as above, but for the lineage HO_SPT.
-B3 <- cuminc(Surv(age_followup, factor(status_competing)) ~ rest_condition,
+B3 <- cuminc(Surv(age_followup, factor(status_competing)) ~ treatment_condition,
              data = tum_df %>% filter(lineage == "HO_SPT")) %>%
   ggcuminc(outcome = "1") +
   add_confidence_interval() +
-  labs_y_only + scale_y + scale_x + rest_scale +
+  labs_y_only + scale_y + scale_x + treatment_scale +
   theme_bw() + theme_common + show_y +
   theme(legend.position = "none") +
   annotate("text", x = 0.2, y = 0.95, label = expression(bolditalic("Ho") * bold("_SPT")),
@@ -520,7 +520,7 @@ B3 <- cuminc(Surv(age_followup, factor(status_competing)) ~ rest_condition,
 
 #' Create panel B combining plots B1, B2, and B3
 B <- (B1 + B2 + B3 + plot_layout(nrow = 1)) +
-  plot_annotation(title = "Interaction between mechanical disruption and lineage",
+  plot_annotation(title = "Interaction between the shaking treatment and the lineage",
                   theme = theme(plot.title = element_text(hjust = 0.5, face = "bold", 
                                                           size = 16, margin = margin(b = 10))))
 

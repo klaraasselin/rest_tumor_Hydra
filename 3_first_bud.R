@@ -86,11 +86,11 @@ FB_df <-
   filter(!is.na(age_followup)) %>%
   
   #' Keep only the variables needed for the analysis.
-  select(age_followup, FB_event, status_competing, rest_condition, lineage, tum_state_early, parent_unique, replicate_unique)
+  select(age_followup, FB_event, status_competing, treatment_condition, lineage, tum_state_early, parent_unique, replicate_unique)
 
 #' Set reference levels for the categorical variables.
 FB_df$lineage <- relevel(factor(FB_df$lineage), ref = "HO_MT")
-FB_df$rest_condition <- relevel(factor(FB_df$rest_condition), ref = "Control")
+FB_df$treatment_condition <- relevel(factor(FB_df$treatment_condition), ref = "Control")
 
 #' # Survival object
 
@@ -101,7 +101,7 @@ FB_surv_object <- Surv(FB_df$age_followup, FB_df$FB_event)
 #' # Proportional hazards assumption check : Schoenfeld residuals
 
 #' Fit a preliminary full Cox model (fixed effects only).
-FB_cox <- coxph(Surv(age_followup, FB_event) ~ rest_condition * lineage * tum_state_early, data = FB_df)
+FB_cox <- coxph(Surv(age_followup, FB_event) ~ treatment_condition * lineage * tum_state_early, data = FB_df)
 
 #' Test the proportional hazards assumption.
 print(cox.zph(FB_cox))
@@ -138,21 +138,21 @@ AIC(FB_dist_weib, FB_dist_lnorm, FB_dist_llog, FB_dist_exp) %>% arrange(AIC)
 #' random-effect structures to find the optimal one.
 
 FB_R_0 <- SurvregME(Surv(age_followup, FB_event) ~ 
-                      rest_condition * lineage * tum_state_early, 
+                      treatment_condition * lineage * tum_state_early, 
                     data = FB_df, dist = "lognormal")
 
 FB_R_1 <- SurvregME(Surv(age_followup, FB_event) ~ 
-                      rest_condition * lineage * tum_state_early + 
+                      treatment_condition * lineage * tum_state_early + 
                       (1 | parent_unique), 
                     data = FB_df, dist = "lognormal")
 
 FB_R_2 <- SurvregME(Surv(age_followup, FB_event) ~ 
-                      rest_condition * lineage * tum_state_early + 
+                      treatment_condition * lineage * tum_state_early + 
                       (1 | replicate_unique), 
                     data = FB_df, dist = "lognormal")
 
 FB_R_3 <- SurvregME(Surv(age_followup, FB_event) ~ 
-                      rest_condition * lineage * tum_state_early + 
+                      treatment_condition * lineage * tum_state_early + 
                       (1 | parent_unique) + (1 | replicate_unique), 
                     data = FB_df, dist = "lognormal") 
 
@@ -167,25 +167,25 @@ AIC(FB_R_0, FB_R_1, FB_R_2, FB_R_3) %>% arrange(AIC)
 #' fixed-effect structures to find the optimal one.
 
 FB_F_0 <- SurvregME(Surv(age_followup, FB_event) ~ 1 + (1 | replicate_unique), data = FB_df, dist = "lognormal")
-FB_F_1 <- SurvregME(Surv(age_followup, FB_event) ~ rest_condition + (1 | replicate_unique), data = FB_df, dist = "lognormal")
+FB_F_1 <- SurvregME(Surv(age_followup, FB_event) ~ treatment_condition + (1 | replicate_unique), data = FB_df, dist = "lognormal")
 FB_F_2 <- SurvregME(Surv(age_followup, FB_event) ~ lineage + (1 | replicate_unique), data = FB_df, dist = "lognormal")
 FB_F_3 <- SurvregME(Surv(age_followup, FB_event) ~ tum_state_early + (1 | replicate_unique), data = FB_df, dist = "lognormal")
-FB_F_4 <- SurvregME(Surv(age_followup, FB_event) ~ rest_condition + lineage + (1 | replicate_unique), data = FB_df, dist = "lognormal")
-FB_F_5 <- SurvregME(Surv(age_followup, FB_event) ~ rest_condition + tum_state_early + (1 | replicate_unique), data = FB_df, dist = "lognormal")
+FB_F_4 <- SurvregME(Surv(age_followup, FB_event) ~ treatment_condition + lineage + (1 | replicate_unique), data = FB_df, dist = "lognormal")
+FB_F_5 <- SurvregME(Surv(age_followup, FB_event) ~ treatment_condition + tum_state_early + (1 | replicate_unique), data = FB_df, dist = "lognormal")
 FB_F_6 <- SurvregME(Surv(age_followup, FB_event) ~ lineage + tum_state_early + (1 | replicate_unique), data = FB_df, dist = "lognormal")
-FB_F_7 <- SurvregME(Surv(age_followup, FB_event) ~ rest_condition * lineage + (1 | replicate_unique), data = FB_df, dist = "lognormal")
-FB_F_8 <- SurvregME(Surv(age_followup, FB_event) ~ rest_condition * tum_state_early + (1 | replicate_unique), data = FB_df, dist = "lognormal")
+FB_F_7 <- SurvregME(Surv(age_followup, FB_event) ~ treatment_condition * lineage + (1 | replicate_unique), data = FB_df, dist = "lognormal")
+FB_F_8 <- SurvregME(Surv(age_followup, FB_event) ~ treatment_condition * tum_state_early + (1 | replicate_unique), data = FB_df, dist = "lognormal")
 FB_F_9 <- SurvregME(Surv(age_followup, FB_event) ~ lineage * tum_state_early + (1 | replicate_unique), data = FB_df, dist = "lognormal")
-FB_F_10 <- SurvregME(Surv(age_followup, FB_event) ~ rest_condition + lineage + tum_state_early + (1 | replicate_unique), data = FB_df, dist = "lognormal")
-FB_F_11 <- SurvregME(Surv(age_followup, FB_event) ~ rest_condition * lineage + tum_state_early + (1 | replicate_unique), data = FB_df, dist = "lognormal")
-FB_F_12 <- SurvregME(Surv(age_followup, FB_event) ~ rest_condition * tum_state_early + lineage + (1 | replicate_unique), data = FB_df, dist = "lognormal")
-FB_F_13 <- SurvregME(Surv(age_followup, FB_event) ~ lineage * tum_state_early + rest_condition + (1 | replicate_unique), data = FB_df, dist = "lognormal")
-FB_F_14 <- SurvregME(Surv(age_followup, FB_event) ~ rest_condition * lineage * tum_state_early + (1 | replicate_unique), data = FB_df, dist = "lognormal")
+FB_F_10 <- SurvregME(Surv(age_followup, FB_event) ~ treatment_condition + lineage + tum_state_early + (1 | replicate_unique), data = FB_df, dist = "lognormal")
+FB_F_11 <- SurvregME(Surv(age_followup, FB_event) ~ treatment_condition * lineage + tum_state_early + (1 | replicate_unique), data = FB_df, dist = "lognormal")
+FB_F_12 <- SurvregME(Surv(age_followup, FB_event) ~ treatment_condition * tum_state_early + lineage + (1 | replicate_unique), data = FB_df, dist = "lognormal")
+FB_F_13 <- SurvregME(Surv(age_followup, FB_event) ~ lineage * tum_state_early + treatment_condition + (1 | replicate_unique), data = FB_df, dist = "lognormal")
+FB_F_14 <- SurvregME(Surv(age_followup, FB_event) ~ treatment_condition * lineage * tum_state_early + (1 | replicate_unique), data = FB_df, dist = "lognormal")
 
 AIC(FB_F_0, FB_F_1, FB_F_2, FB_F_3, FB_F_4, FB_F_5, FB_F_6, FB_F_7, 
     FB_F_8, FB_F_9, FB_F_10, FB_F_11, FB_F_12, FB_F_13, FB_F_14) %>% arrange(AIC)
 
-#' The model with the interaction between the rest condition and the lineage, and with
+#' The model with the interaction between the treatment condition and the lineage, and with
 #' the additive effect of tumoral state has the lowest AIC and is therefore selected (FB_F_11).
 #' 
 #' ## Goodness-of-fit evaluation
@@ -202,46 +202,46 @@ plot_cox_snell_survregme(model = FB_F_11, data = FB_df, time_col  = "age_followu
 
 FB_df$lineage <- relevel(FB_df$lineage, ref = "HO_MT")
 summary(SurvregME(Surv(age_followup, FB_event) ~ 
-                    rest_condition * lineage + tum_state_early + (1 | replicate_unique), 
+                    treatment_condition * lineage + tum_state_early + (1 | replicate_unique), 
                   data = FB_df, dist = "lognormal"))
 
 FB_df$lineage <- relevel(FB_df$lineage, ref = "HO_SPC")
 summary(SurvregME(Surv(age_followup, FB_event) ~ 
-                    rest_condition * lineage + tum_state_early + (1 | replicate_unique), 
+                    treatment_condition * lineage + tum_state_early + (1 | replicate_unique), 
                   data = FB_df, dist = "lognormal"))
 
 FB_df$lineage <- relevel(FB_df$lineage, ref = "HO_SPT")
 summary(SurvregME(Surv(age_followup, FB_event) ~ 
-                    rest_condition * lineage + tum_state_early + (1 | replicate_unique), 
+                    treatment_condition * lineage + tum_state_early + (1 | replicate_unique), 
                   data = FB_df, dist = "lognormal"))
 
 FB_df$lineage <- relevel(FB_df$lineage, ref = "HO_VLN")
 summary(SurvregME(Surv(age_followup, FB_event) ~ 
-                    rest_condition * lineage + tum_state_early + (1 | replicate_unique), 
+                    treatment_condition * lineage + tum_state_early + (1 | replicate_unique), 
                   data = FB_df, dist = "lognormal"))
 
 FB_df$lineage <- relevel(FB_df$lineage, ref = "HC_MT")
 summary(SurvregME(Surv(age_followup, FB_event) ~ 
-                    rest_condition * lineage + tum_state_early + (1 | replicate_unique), 
+                    treatment_condition * lineage + tum_state_early + (1 | replicate_unique), 
                   data = FB_df, dist = "lognormal"))
 
 FB_df$lineage <- relevel(FB_df$lineage, ref = "HV_GAL")
 summary(SurvregME(Surv(age_followup, FB_event) ~ 
-                    rest_condition * lineage + tum_state_early + (1 | replicate_unique), 
+                    treatment_condition * lineage + tum_state_early + (1 | replicate_unique), 
                   data = FB_df, dist = "lognormal"))
 
 #' # Median times
 
-#' ## By rest condition
+#' ## By treatment condition
 
 #' Estimate cumulative incidence functions for the first bud event,
-#' accounting for the competing risk of death, stratified by rest condition.
+#' accounting for the competing risk of death, stratified by treatment condition.
 
-FB_cuminc_rest <- cuminc(Surv(age_followup, status_competing) ~ rest_condition, data = FB_df)
+FB_cuminc_treatment <- cuminc(Surv(age_followup, status_competing) ~ treatment_condition, data = FB_df)
 
 #' For each stratum, extract the median time to event and its 95CI.
 
-FB_medians_rest <- tidy(FB_cuminc_rest) %>%
+FB_medians_treatment <- tidy(FB_cuminc_treatment) %>%
   dplyr::filter(outcome == "1") %>%
   dplyr::group_by(strata) %>%
   dplyr::arrange(time) %>%
@@ -254,7 +254,7 @@ FB_medians_rest <- tidy(FB_cuminc_rest) %>%
     if (is.na(idx)) NA_real_ else time[idx] },
     .groups = "drop")
 
-print(FB_medians_rest)
+print(FB_medians_treatment)
 
 #' ## By lineage
 
@@ -277,11 +277,11 @@ FB_medians_lineage <- tidy(FB_cuminc_lineage) %>%
 
 print(FB_medians_lineage)
 
-#' ## By rest condition and lineage
+#' ## By treatment condition and lineage
 
-#' Same method as above, but stratified by rest condition and lineage.
+#' Same method as above, but stratified by treatment condition and lineage.
 
-FB_cuminc_interaction <- cuminc(Surv(age_followup, status_competing) ~ rest_condition + lineage, data = FB_df)
+FB_cuminc_interaction <- cuminc(Surv(age_followup, status_competing) ~ treatment_condition + lineage, data = FB_df)
 
 FB_medians_interaction <- tidy(FB_cuminc_interaction) %>%
   dplyr::filter(outcome == "1") %>%
@@ -321,12 +321,12 @@ print(FB_medians_tum)
 
 #' # Cumulative incidences
 
-#' ## By week and rest condition
+#' ## By week and treatment condition
 
 #' Convert the continuous cumulative incidence function into a weekly summary table:
-#' for each stratum of rest condition and each week, show the estimate with its 95CI.
+#' for each stratum of treatment condition and each week, show the estimate with its 95CI.
 
-FB_incidence_rest <- tidy(FB_cuminc_rest) %>%
+FB_incidence_treatment <- tidy(FB_cuminc_treatment) %>%
   dplyr::filter(outcome == "1") %>%
   dplyr::mutate(week = ceiling(time)) %>%
   dplyr::group_by(strata, week) %>%
@@ -336,7 +336,7 @@ FB_incidence_rest <- tidy(FB_cuminc_rest) %>%
   dplyr::select(strata, week, estimate_cuminc = estimate, conf.low, conf.high) %>%
   dplyr::arrange(strata, week)
 
-print(FB_incidence_rest)
+print(FB_incidence_treatment)
 
 #' ## By week and lineage
 
@@ -354,9 +354,9 @@ FB_incidence_lineage <- tidy(FB_cuminc_lineage) %>%
 
 print(FB_incidence_lineage)
 
-#' ## By week, rest condition, and lineage
+#' ## By week, treatment condition, and lineage
 
-#' Same method as above, but stratified by rest condition and lineage.
+#' Same method as above, but stratified by treatment condition and lineage.
 
 FB_incidence_interaction <- tidy(FB_cuminc_interaction) %>%
   dplyr::filter(outcome == "1") %>%
@@ -388,14 +388,14 @@ print(FB_incidence_tum)
 
 #' # Cumulative proportions
 
-#' ## By week and rest condition
+#' ## By week and treatment condition
 
 #' Compute raw cumulative proportions of first bud production per week, 
-#' stratified by rest condition.
+#' stratified by treatment condition.
 
-FB_proportions_rest <- FB_df %>%
+FB_proportions_treatment <- FB_df %>%
   dplyr::mutate(week_FB_event = ceiling(age_followup)) %>%
-  dplyr::group_by(rest_condition) %>%
+  dplyr::group_by(treatment_condition) %>%
   dplyr::summarise(total_N = n(),
                    n1 = sum(week_FB_event <= 1 & FB_event == 1),
                    n2 = sum(week_FB_event <= 2 & FB_event == 1),
@@ -414,9 +414,9 @@ FB_proportions_rest <- FB_df %>%
                       names_to = c(".value", "week"),
                       names_pattern = "(n|p)([1-6])") %>%
   dplyr::mutate(week = as.numeric(week)) %>%
-  dplyr::select(rest_condition, week, n, total_N, raw_proportion = p)
+  dplyr::select(treatment_condition, week, n, total_N, raw_proportion = p)
 
-print(FB_proportions_rest)
+print(FB_proportions_treatment)
 
 #' ## By week and lineage
 
@@ -447,13 +447,13 @@ FB_proportions_lineage <- FB_df %>%
 
 print(FB_proportions_lineage)
 
-#' ## By week, rest condition, and lineage
+#' ## By week, treatment condition, and lineage
 
-#' Same method as above, but stratified by rest condition and lineage.
+#' Same method as above, but stratified by treatment condition and lineage.
 
 FB_proportions_interaction <- FB_df %>%
   dplyr::mutate(week_FB_event = ceiling(age_followup)) %>%
-  dplyr::group_by(rest_condition, lineage) %>%
+  dplyr::group_by(treatment_condition, lineage) %>%
   dplyr::summarise(total_N = n(),
                    n1 = sum(week_FB_event <= 1 & FB_event == 1),
                    n2 = sum(week_FB_event <= 2 & FB_event == 1),
@@ -472,7 +472,7 @@ FB_proportions_interaction <- FB_df %>%
                       names_to = c(".value", "week"),
                       names_pattern = "(n|p)([1-6])") %>%
   dplyr::mutate(week = as.numeric(week)) %>%
-  dplyr::select(rest_condition, lineage, week, n, total_N, raw_proportion = p)
+  dplyr::select(treatment_condition, lineage, week, n, total_N, raw_proportion = p)
 
 print(FB_proportions_interaction)
 
@@ -543,10 +543,10 @@ tum_scale <- list(
   scale_color_manual(values = tum_colors),
   scale_fill_manual(values = tum_colors))
 
-#' Color scales for rest condition
-rest_scale <- list(
-  scale_color_manual(values = rest_condition_colors, breaks = c("Control", "Mechanical disruption")),
-  scale_fill_manual(values = rest_condition_colors, breaks = c("Control", "Mechanical disruption")))
+#' Color scales for treatment condition
+treatment_scale <- list(
+  scale_color_manual(values = treatment_condition_colors, breaks = c("Control", "Shaking treatment")),
+  scale_fill_manual(values = treatment_condition_colors, breaks = c("Control", "Shaking treatment")))
 
 #' Theme shared by panels A, B, and C (angle = 90 for bottom-to-top reading)
 theme_common <- theme(
@@ -560,15 +560,15 @@ labs_x_only <- labs(x = "Time (weeks)", y = NULL, title = NULL)
 labs_y_only <- labs(x = NULL, y = "Cumulative incidence of\nfirst bud production", title = NULL)
 labs_xy     <- labs(x = "Time (weeks)", y = "Cumulative incidence of\nfirst bud production", title = NULL)
 
-#' ## Panel A: interaction between rest condition and lineage
+#' ## Panel A: interaction between treatment condition and lineage
 
 #' ### HO_SPT
-A1 <- cuminc(Surv(age_followup, factor(status_competing)) ~ rest_condition, 
+A1 <- cuminc(Surv(age_followup, factor(status_competing)) ~ treatment_condition, 
              data = FB_df %>% filter(lineage == "HO_SPT") %>%
-               mutate(rest_condition = factor(rest_condition, levels = c("Control", "Mechanical disruption")))) %>%
+               mutate(treatment_condition = factor(treatment_condition, levels = c("Control", "Shaking treatment")))) %>%
   ggcuminc(outcome = "1") +
   add_confidence_interval() +
-  labs_base + scale_y + scale_x + rest_scale +
+  labs_base + scale_y + scale_x + treatment_scale +
   theme_bw() + theme_common + hide_y +
   theme(axis.text.x = element_text(color = "black", size = 14),
         legend.position = "none") +
@@ -576,12 +576,12 @@ A1 <- cuminc(Surv(age_followup, factor(status_competing)) ~ rest_condition,
            color = "black", size = 5, hjust = 1, vjust = 0)
 
 #' ### HO_VLN
-A2 <- cuminc(Surv(age_followup, factor(status_competing)) ~ rest_condition, 
+A2 <- cuminc(Surv(age_followup, factor(status_competing)) ~ treatment_condition, 
              data = FB_df %>% filter(lineage == "HO_VLN") %>%
-               mutate(rest_condition = factor(rest_condition, levels = c("Control", "Mechanical disruption")))) %>%
+               mutate(treatment_condition = factor(treatment_condition, levels = c("Control", "Shaking treatment")))) %>%
   ggcuminc(outcome = "1") +
   add_confidence_interval() +
-  labs_x_only + scale_y + scale_x + rest_scale +
+  labs_x_only + scale_y + scale_x + treatment_scale +
   theme_bw() + theme_common + hide_y +
   theme(axis.text.x = element_text(color = "black", size = 14),
         legend.position = "none") +
@@ -589,12 +589,12 @@ A2 <- cuminc(Surv(age_followup, factor(status_competing)) ~ rest_condition,
            color = "black", size = 5, hjust = 1, vjust = 0)
 
 #' ### HC_MT
-A3 <- cuminc(Surv(age_followup, factor(status_competing)) ~ rest_condition, 
+A3 <- cuminc(Surv(age_followup, factor(status_competing)) ~ treatment_condition, 
              data = FB_df %>% filter(lineage == "HC_MT") %>%
-               mutate(rest_condition = factor(rest_condition, levels = c("Control", "Mechanical disruption")))) %>%
+               mutate(treatment_condition = factor(treatment_condition, levels = c("Control", "Shaking treatment")))) %>%
   ggcuminc(outcome = "1") +
   add_confidence_interval() +
-  labs_y_only + scale_y + scale_x + rest_scale +
+  labs_y_only + scale_y + scale_x + treatment_scale +
   theme_bw() + theme_common + show_y +
   theme(axis.text.x = element_text(color = "black", size = 14),
         legend.position = "none") +
@@ -610,7 +610,7 @@ shared_treatment_legend <- cowplot::get_legend(
 
 #' Combine A1, A2, and A3 into panel "A"
 A <- (A1 + A2 + A3 + plot_layout(nrow = 1)) +
-  plot_annotation(title = "Interaction between mechanical disruption and lineage",
+  plot_annotation(title = "Interaction between the shaking treatment and the lineage",
                   theme = theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 16, margin = margin(b = 10))))
 
 #' ## Panel B: by tumoral state

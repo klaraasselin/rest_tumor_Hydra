@@ -66,12 +66,12 @@ buds_df <-
   filter(!is.na(buds)) %>%
   
   #' Keep only the variables needed for the analysis.
-  select(rest_condition, lineage, tum_state, week, week_centered, 
+  select(treatment_condition, lineage, tum_state, week, week_centered, 
          buds, id_unique, parent_unique, replicate_unique) 
 
 #' Set reference levels for the categorical variables.
 buds_df$lineage <- relevel(factor(buds_df$lineage), ref = "HO_MT")
-buds_df$rest_condition <- relevel(factor(buds_df$rest_condition), ref = "Control")
+buds_df$treatment_condition <- relevel(factor(buds_df$treatment_condition), ref = "Control")
 buds_df$tum_state <- relevel(factor(buds_df$tum_state), ref = "Healthy")
 
 #' # Model selection
@@ -81,14 +81,14 @@ buds_df$tum_state <- relevel(factor(buds_df$tum_state), ref = "Healthy")
 #' With the full fixed-effect structure held constant, compare different
 #' random-effect structures to find the optimal one.
 
-buds_pois_R_00 <- glmmTMB(buds ~ week_centered * lineage * rest_condition, REML = TRUE, family = poisson, data = buds_df)
-buds_pois_R_01 <- glmmTMB(buds ~ week_centered * lineage * rest_condition + (1 | id_unique), REML = TRUE, family = poisson, data = buds_df)
-buds_pois_R_02 <- glmmTMB(buds ~ week_centered * lineage * rest_condition + (week_centered | id_unique), REML = TRUE, family = poisson, data = buds_df)
-buds_pois_R_03 <- glmmTMB(buds ~ week_centered * lineage * rest_condition + (1 | parent_unique), REML = TRUE, family = poisson, data = buds_df)
-buds_pois_R_04 <- glmmTMB(buds ~ week_centered * lineage * rest_condition + (1 | replicate_unique), REML = TRUE, family = poisson, data = buds_df)
-buds_pois_R_05 <- glmmTMB(buds ~ week_centered * lineage * rest_condition + (1 | id_unique) + (1 | parent_unique), REML = TRUE, family = poisson, data = buds_df)
-buds_pois_R_06 <- glmmTMB(buds ~ week_centered * lineage * rest_condition + (1 | id_unique) + (1 | replicate_unique), REML = TRUE, family = poisson, data = buds_df)
-buds_pois_R_07 <- glmmTMB(buds ~ week_centered * lineage * rest_condition + (1 | id_unique) + (1 | parent_unique) + (1 | replicate_unique), REML = TRUE, family = poisson, data = buds_df)
+buds_pois_R_00 <- glmmTMB(buds ~ week_centered * lineage * treatment_condition, REML = TRUE, family = poisson, data = buds_df)
+buds_pois_R_01 <- glmmTMB(buds ~ week_centered * lineage * treatment_condition + (1 | id_unique), REML = TRUE, family = poisson, data = buds_df)
+buds_pois_R_02 <- glmmTMB(buds ~ week_centered * lineage * treatment_condition + (week_centered | id_unique), REML = TRUE, family = poisson, data = buds_df)
+buds_pois_R_03 <- glmmTMB(buds ~ week_centered * lineage * treatment_condition + (1 | parent_unique), REML = TRUE, family = poisson, data = buds_df)
+buds_pois_R_04 <- glmmTMB(buds ~ week_centered * lineage * treatment_condition + (1 | replicate_unique), REML = TRUE, family = poisson, data = buds_df)
+buds_pois_R_05 <- glmmTMB(buds ~ week_centered * lineage * treatment_condition + (1 | id_unique) + (1 | parent_unique), REML = TRUE, family = poisson, data = buds_df)
+buds_pois_R_06 <- glmmTMB(buds ~ week_centered * lineage * treatment_condition + (1 | id_unique) + (1 | replicate_unique), REML = TRUE, family = poisson, data = buds_df)
+buds_pois_R_07 <- glmmTMB(buds ~ week_centered * lineage * treatment_condition + (1 | id_unique) + (1 | parent_unique) + (1 | replicate_unique), REML = TRUE, family = poisson, data = buds_df)
 
 AIC(buds_pois_R_00, buds_pois_R_01, buds_pois_R_02, buds_pois_R_03, buds_pois_R_04, 
     buds_pois_R_05, buds_pois_R_06, buds_pois_R_07) %>% arrange(AIC)
@@ -104,40 +104,40 @@ AIC(buds_pois_R_00, buds_pois_R_01, buds_pois_R_02, buds_pois_R_03, buds_pois_R_
 buds_pois_F_00 <- glmmTMB(buds ~ 1 + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
 buds_pois_F_01 <- glmmTMB(buds ~ week_centered + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
 buds_pois_F_02 <- glmmTMB(buds ~ lineage + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
-buds_pois_F_03 <- glmmTMB(buds ~ rest_condition + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
+buds_pois_F_03 <- glmmTMB(buds ~ treatment_condition + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
 buds_pois_F_04 <- glmmTMB(buds ~ tum_state + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
 buds_pois_F_05 <- glmmTMB(buds ~ week_centered + lineage + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
-buds_pois_F_06 <- glmmTMB(buds ~ week_centered + rest_condition + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
+buds_pois_F_06 <- glmmTMB(buds ~ week_centered + treatment_condition + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
 buds_pois_F_07 <- glmmTMB(buds ~ week_centered + tum_state + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
-buds_pois_F_08 <- glmmTMB(buds ~ lineage + rest_condition + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
+buds_pois_F_08 <- glmmTMB(buds ~ lineage + treatment_condition + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
 buds_pois_F_09 <- glmmTMB(buds ~ lineage + tum_state + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
-buds_pois_F_10 <- glmmTMB(buds ~ rest_condition + tum_state + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
+buds_pois_F_10 <- glmmTMB(buds ~ treatment_condition + tum_state + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
 buds_pois_F_11 <- glmmTMB(buds ~ week_centered * lineage + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
-buds_pois_F_12 <- glmmTMB(buds ~ week_centered * rest_condition + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
+buds_pois_F_12 <- glmmTMB(buds ~ week_centered * treatment_condition + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
 buds_pois_F_13 <- glmmTMB(buds ~ week_centered * tum_state + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
-buds_pois_F_14 <- glmmTMB(buds ~ lineage * rest_condition + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
+buds_pois_F_14 <- glmmTMB(buds ~ lineage * treatment_condition + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
 buds_pois_F_15 <- glmmTMB(buds ~ lineage * tum_state + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
-buds_pois_F_16 <- glmmTMB(buds ~ rest_condition * tum_state + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
-buds_pois_F_17 <- glmmTMB(buds ~ week_centered + lineage + rest_condition + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
+buds_pois_F_16 <- glmmTMB(buds ~ treatment_condition * tum_state + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
+buds_pois_F_17 <- glmmTMB(buds ~ week_centered + lineage + treatment_condition + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
 buds_pois_F_18 <- glmmTMB(buds ~ week_centered + lineage + tum_state + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
-buds_pois_F_19 <- glmmTMB(buds ~ week_centered + rest_condition + tum_state + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
-buds_pois_F_20 <- glmmTMB(buds ~ lineage + rest_condition + tum_state + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
-buds_pois_F_21 <- glmmTMB(buds ~ week_centered * lineage + rest_condition + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
-buds_pois_F_22 <- glmmTMB(buds ~ week_centered * rest_condition + lineage + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
+buds_pois_F_19 <- glmmTMB(buds ~ week_centered + treatment_condition + tum_state + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
+buds_pois_F_20 <- glmmTMB(buds ~ lineage + treatment_condition + tum_state + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
+buds_pois_F_21 <- glmmTMB(buds ~ week_centered * lineage + treatment_condition + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
+buds_pois_F_22 <- glmmTMB(buds ~ week_centered * treatment_condition + lineage + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
 buds_pois_F_23 <- glmmTMB(buds ~ week_centered * tum_state + lineage + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
 buds_pois_F_24 <- glmmTMB(buds ~ week_centered * lineage + tum_state + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
-buds_pois_F_25 <- glmmTMB(buds ~ week_centered * rest_condition + tum_state + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
-buds_pois_F_26 <- glmmTMB(buds ~ week_centered * tum_state + rest_condition + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
-buds_pois_F_27 <- glmmTMB(buds ~ lineage * rest_condition + week_centered + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
+buds_pois_F_25 <- glmmTMB(buds ~ week_centered * treatment_condition + tum_state + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
+buds_pois_F_26 <- glmmTMB(buds ~ week_centered * tum_state + treatment_condition + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
+buds_pois_F_27 <- glmmTMB(buds ~ lineage * treatment_condition + week_centered + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
 buds_pois_F_28 <- glmmTMB(buds ~ lineage * tum_state + week_centered + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
-buds_pois_F_29 <- glmmTMB(buds ~ rest_condition * tum_state + week_centered + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
-buds_pois_F_30 <- glmmTMB(buds ~ lineage * rest_condition + tum_state + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
-buds_pois_F_31 <- glmmTMB(buds ~ lineage * tum_state + rest_condition + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
-buds_pois_F_32 <- glmmTMB(buds ~ rest_condition * tum_state + lineage + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
-buds_pois_F_33 <- glmmTMB(buds ~ week_centered * lineage * rest_condition + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
+buds_pois_F_29 <- glmmTMB(buds ~ treatment_condition * tum_state + week_centered + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
+buds_pois_F_30 <- glmmTMB(buds ~ lineage * treatment_condition + tum_state + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
+buds_pois_F_31 <- glmmTMB(buds ~ lineage * tum_state + treatment_condition + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
+buds_pois_F_32 <- glmmTMB(buds ~ treatment_condition * tum_state + lineage + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
+buds_pois_F_33 <- glmmTMB(buds ~ week_centered * lineage * treatment_condition + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
 buds_pois_F_34 <- glmmTMB(buds ~ week_centered * lineage * tum_state + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
-buds_pois_F_35 <- glmmTMB(buds ~ week_centered * rest_condition * tum_state + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
-buds_pois_F_36 <- glmmTMB(buds ~ lineage * rest_condition * tum_state + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
+buds_pois_F_35 <- glmmTMB(buds ~ week_centered * treatment_condition * tum_state + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
+buds_pois_F_36 <- glmmTMB(buds ~ lineage * treatment_condition * tum_state + (1 | replicate_unique), REML = FALSE, family = poisson, data = buds_df)
 
 AIC(buds_pois_F_00, buds_pois_F_01, buds_pois_F_02, buds_pois_F_03, buds_pois_F_04,
     buds_pois_F_05, buds_pois_F_06, buds_pois_F_07, buds_pois_F_08, buds_pois_F_09,
@@ -148,13 +148,13 @@ AIC(buds_pois_F_00, buds_pois_F_01, buds_pois_F_02, buds_pois_F_03, buds_pois_F_
     buds_pois_F_30, buds_pois_F_31, buds_pois_F_32, buds_pois_F_33, buds_pois_F_34,
     buds_pois_F_35, buds_pois_F_36) %>% arrange(AIC)
 
-#' The model with the interaction between the week, the lineage and the rest condition
+#' The model with the interaction between the week, the lineage and the treatment condition
 #' has the lowest AIC and is therefore selected (buds_pois_F_33).
 #' 
 #' ## Goodness-of-fit evaluation
 
 #' Refit the selected model.
-buds_pois_mod_33 <- glmmTMB(buds ~ week_centered * lineage * rest_condition + (1 | replicate_unique), REML = TRUE, family = poisson, data = buds_df)
+buds_pois_mod_33 <- glmmTMB(buds ~ week_centered * lineage * treatment_condition + (1 | replicate_unique), REML = TRUE, family = poisson, data = buds_df)
 
 #' Assess goodness-of-fit of the selected model using simulated residuals.
 buds_pois_mod_33_res <- simulateResiduals(buds_pois_mod_33, plot = TRUE)
@@ -164,22 +164,22 @@ buds_pois_mod_33_res <- simulateResiduals(buds_pois_mod_33, plot = TRUE)
 # Releveling of "lineage" to obtain all pairwise comparisons from the same model.
 
 buds_df$lineage <- relevel(buds_df$lineage, ref = "HO_MT")
-summary(glmmTMB(buds ~ week_centered * lineage * rest_condition + (1 | replicate_unique), REML = TRUE, family = poisson, data = buds_df))
+summary(glmmTMB(buds ~ week_centered * lineage * treatment_condition + (1 | replicate_unique), REML = TRUE, family = poisson, data = buds_df))
 
 buds_df$lineage <- relevel(buds_df$lineage, ref = "HO_SPC")
-summary(glmmTMB(buds ~ week_centered * lineage * rest_condition + (1 | replicate_unique), REML = TRUE, family = poisson, data = buds_df))
+summary(glmmTMB(buds ~ week_centered * lineage * treatment_condition + (1 | replicate_unique), REML = TRUE, family = poisson, data = buds_df))
 
 buds_df$lineage <- relevel(buds_df$lineage, ref = "HO_SPT")
-summary(glmmTMB(buds ~ week_centered * lineage * rest_condition + (1 | replicate_unique), REML = TRUE, family = poisson, data = buds_df))
+summary(glmmTMB(buds ~ week_centered * lineage * treatment_condition + (1 | replicate_unique), REML = TRUE, family = poisson, data = buds_df))
 
 buds_df$lineage <- relevel(buds_df$lineage, ref = "HO_VLN")
-summary(glmmTMB(buds ~ week_centered * lineage * rest_condition + (1 | replicate_unique), REML = TRUE, family = poisson, data = buds_df))
+summary(glmmTMB(buds ~ week_centered * lineage * treatment_condition + (1 | replicate_unique), REML = TRUE, family = poisson, data = buds_df))
 
 buds_df$lineage <- relevel(buds_df$lineage, ref = "HC_MT")
-summary(glmmTMB(buds ~ week_centered * lineage * rest_condition + (1 | replicate_unique), REML = TRUE, family = poisson, data = buds_df))
+summary(glmmTMB(buds ~ week_centered * lineage * treatment_condition + (1 | replicate_unique), REML = TRUE, family = poisson, data = buds_df))
 
 buds_df$lineage <- relevel(buds_df$lineage, ref = "HV_GAL")
-summary(glmmTMB(buds ~ week_centered * lineage * rest_condition + (1 | replicate_unique), REML = TRUE, family = poisson, data = buds_df))
+summary(glmmTMB(buds ~ week_centered * lineage * treatment_condition + (1 | replicate_unique), REML = TRUE, family = poisson, data = buds_df))
 
 #' # Estimated marginal means
 
@@ -190,10 +190,10 @@ week_values <- 1:6 - mean(buds_df$week, na.rm = TRUE)
 week_terms <- paste0("week_centered [", paste(week_values, collapse = ","), "]")
 
 #' Compute the estimated marginal means of weekly bud production for every
-#' combination of week, rest condition, and lineage, based on the selected model.
+#' combination of week, treatment condition, and lineage, based on the selected model.
 buds_emmeans <- 
   as.data.frame(ggemmeans(buds_pois_mod_33,
-                          terms = c(week_terms, "rest_condition", "lineage"),
+                          terms = c(week_terms, "treatment_condition", "lineage"),
                           bias_correction = TRUE)) %>%
   arrange(facet, group, x)
 
@@ -208,7 +208,7 @@ buds_emmeans$x <- round(buds_emmeans$x)
 #' ## Common functions
 
 #' Function to plot, for a single lineage, the predicted weekly bud production 
-#' by rest condition.
+#' by treatment condition.
 buds_plot_treatment <- function(lineage, show_y_text = FALSE, show_x_text = TRUE, show_y_title = FALSE, show_x_title = FALSE) {
   data_sub <- subset(buds_emmeans, facet == lineage)
 
@@ -235,13 +235,13 @@ buds_plot_treatment <- function(lineage, show_y_text = FALSE, show_x_text = TRUE
     scale_x_continuous(limits = c(1, 6), breaks = c(2, 4, 6)) +
     scale_y_continuous(position = "right") +
     coord_cartesian(ylim = c(0, 3.5)) +
-    scale_color_manual(values = rest_condition_colors) +
-    scale_fill_manual(values = rest_condition_colors) +
+    scale_color_manual(values = treatment_condition_colors) +
+    scale_fill_manual(values = treatment_condition_colors) +
     annotate("text", x = 1.2, y = 3.3, label = label_expr, 
              color = "black", size = 5, hjust = 0, vjust = 1) }
 
 #' Function to plot, for a single lineage, the predicted weekly bud production 
-#' pooled across rest conditions.
+#' pooled across treatment conditions.
 buds_plot_lineage <- function(lineage, show_y_text = FALSE, show_x_text = TRUE, show_y_title = FALSE, show_x_title = FALSE) {
   data_sub <- subset(buds_emmeans, facet == lineage)
   data_lineage <- aggregate(cbind(predicted, conf.low, conf.high) ~ x, data = data_sub, FUN = mean)
@@ -272,7 +272,7 @@ buds_plot_lineage <- function(lineage, show_y_text = FALSE, show_x_text = TRUE, 
     annotate("text", x = 1.2, y = 3.3, label = label_expr, 
              color = "black", size = 5, hjust = 0, vjust = 1) }
 
-#' ## Panel A: interaction between rest condition and lineage
+#' ## Panel A: interaction between treatment condition and lineage
 
 A1 <- buds_plot_treatment("HO_MT", show_y_text = FALSE, show_x_text = FALSE)
 A2 <- buds_plot_treatment("HO_SPC", show_y_text = FALSE, show_x_text = FALSE)
@@ -314,7 +314,7 @@ legend_treatment <- cowplot::get_legend(
 
 #' Build title graphical objects for each panel.
 interaction_title_grob <- cowplot::ggdraw() + 
-  cowplot::draw_label("Interaction between mechanical disruption and lineage", 
+  cowplot::draw_label("Interaction between the shaking treatment and the lineage", 
                       fontface = "bold", size = 16, x = 0.5, hjust = 0.5)
 
 lineage_title_grob <- cowplot::ggdraw() + 

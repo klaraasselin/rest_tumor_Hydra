@@ -33,13 +33,13 @@ df <-
     age_tum = as.numeric(date_tum - date_birth),
     age_death = as.numeric(date_death - date_birth),
     
-    #' Homogenize rest condition names
-    rest_condition = forcats::fct_recode(
+    #' Homogenize treatment condition names
+    treatment_condition = forcats::fct_recode(
       factor(treatment),
       "Control" = "Sleep",
       "Control" = "sleep",
-      "Mechanical disruption" = "sleep_deprivation",
-      "Mechanical disruption" = "Sleep deprivation"),
+      "Shaking treatment" = "sleep_deprivation",
+      "Shaking treatment" = "Sleep deprivation"),
     
     #' Homogenize lineages names 
     lineage = recode(
@@ -56,7 +56,7 @@ df <-
                             labels = c("Healthy", "Tumoral")),
     
     #' Convert categorical variables to factors
-    rest_condition = factor(as.character(rest_condition)),
+    treatment_condition = factor(as.character(treatment_condition)),
     lineage = factor(as.character(lineage)),
     replicate = factor(as.numeric(replicate)),
     parent = factor(as.numeric(parent)),
@@ -76,15 +76,15 @@ df <-
     FB_state = ifelse(is.na(age_FB), 0, FB_state),
     
     #' Create unique ids, used later as random effects
-    id_unique = paste0(as.character(id), "_", as.character(replicate), "_", rest_condition, "_", as.character(lineage)),
+    id_unique = paste0(as.character(id), "_", as.character(replicate), "_", treatment_condition, "_", as.character(lineage)),
     parent_unique = paste0(as.character(parent), "_", as.character(lineage)),
     replicate_unique = paste0(as.character(parent), "_", as.character(replicate), "_", as.character(lineage)))
 
 #' Color palettes for the plots
 
-rest_condition_colors <- c(
+treatment_condition_colors <- c(
   "Control" = "cyan",          
-  "Mechanical disruption" = "orange")
+  "Shaking treatment" = "orange")
 
 tum_colors <- c(
   "Healthy"  = "green", 
